@@ -470,7 +470,7 @@
         default(option) {
           if (typeof option === 'object') {
             if (this.label && option[this.label]) {
-              return option[this.label]
+              return (option.translation && option.translation[this.lang]) ? option.translation[this.lang] : option[this.label]
             }
           }
           return option;
@@ -562,6 +562,16 @@
         type: String,
         default: 'auto'
       },
+
+      /**
+       * Lang support for wisdomhs's translate structure.
+       * @type {String}
+       * @default 'tr'
+       */
+      lang: {
+        type: String,
+        default: 'en'
+      },
     },
 
     data() {
@@ -576,12 +586,22 @@
     watch: {
       /**
        * When the value prop changes, update
-			 * the internal mutableValue.
+       * the internal mutableValue.
        * @param  {mixed} val
        * @return {void}
        */
       value(val) {
-				this.mutableValue = val
+        if (this.multiple) {
+          if (!this.mutableValue) {
+            this.mutableValue = []
+          }
+        } else {
+          if (typeof val === 'object') {
+            this.mutableValue = val
+          } else {
+            this.mutableValue = this.mutableOptions.filter(option => option.value == val)[0]
+          }
+        }
       },
 
       /**
@@ -590,7 +610,7 @@
        * @param  {string|object} old
        * @return {void}
        */
-			mutableValue(val, old) {
+      mutableValue(val, old) {
         if (this.multiple) {
           this.onChange ? this.onChange(val) : null
         } else {
@@ -609,24 +629,24 @@
       },
 
       /**
-			 * Maybe reset the mutableValue
+       * Maybe reset the mutableValue
        * when mutableOptions change.
        * @return {[type]} [description]
        */
       mutableOptions() {
         if (!this.taggable && this.resetOnOptionsChange) {
-					this.mutableValue = this.multiple ? [] : null
+          this.mutableValue = this.multiple ? [] : null
         }
       },
 
       /**
-			 * Always reset the mutableValue when
+       * Always reset the mutableValue when
        * the multiple prop changes.
        * @param  {Boolean} val
        * @return {void}
        */
       multiple(val) {
-				this.mutableValue = val ? [] : null
+        this.mutableValue = val ? [] : null
       }
     },
 
@@ -635,9 +655,28 @@
      * attach any event listeners.
      */
     created() {
-			this.mutableValue = this.value
       this.mutableOptions = this.options.slice(0)
-			this.mutableLoading = this.loading
+      this.mutableLoading = this.loading
+
+      if (this.multiple) {
+        if (!this.mutableValue) {
+          this.mutableValue = []
+        }
+
+        for (let i in this.value) {
+          if (typeof this.value === 'options') {
+            this.mutableValue.push(this.value[i])
+          } else {
+            this.mutableValue.push(this.mutableOptions.filter(option => option.value == this.value[i])[0])
+          }
+        }
+      } else {
+        if (typeof this.value === 'object') {
+          this.mutableValue = this.value
+        } else {
+          this.mutableValue = this.mutableOptions.filter(option => option.value == this.value)[0]
+        }
+      }
 
       this.$on('option:created', this.maybePushTag)
     },
