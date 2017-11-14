@@ -344,6 +344,7 @@
   import pointerScroll from '../mixins/pointerScroll'
   import typeAheadPointer from '../mixins/typeAheadPointer'
   import ajax from '../mixins/ajax'
+  import { mapGetters } from 'vuex';
 
   export default {
     mixins: [pointerScroll, typeAheadPointer, ajax],
@@ -455,7 +456,7 @@
        */
       label: {
         type: String,
-        default: 'label'
+        default: 'caption'
       },
 
       /**
@@ -561,17 +562,7 @@
       dir: {
         type: String,
         default: 'auto'
-      },
-
-      /**
-       * Lang support for wisdomhs's translate structure.
-       * @type {String}
-       * @default 'tr'
-       */
-      lang: {
-        type: String,
-        default: 'en'
-      },
+      }
     },
 
     data() {
@@ -655,6 +646,9 @@
      * attach any event listeners.
      */
     created() {
+      if (!this.lang) {
+        this.lang = 'en';
+      }
       this.mutableOptions = this.options.slice(0)
       this.mutableLoading = this.loading
 
@@ -869,7 +863,9 @@
     },
 
     computed: {
-
+      ...mapGetters({
+        lang: 'lang'
+      }),
       /**
        * Classes to be output on .dropdown
        * @return {Object}
